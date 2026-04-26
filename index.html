@@ -1,1 +1,71 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Map App</title>
 
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+    <link rel="stylesheet" href="styles.css" />
+</head>
+
+<body>
+    
+<div id="ui-container">
+
+    <!-- SIDEBAR -->
+    <div id="sidebar" class="sidebar"></div>
+
+    <!-- MAP -->
+    <div id="map"></div>
+
+    <!-- INFO CARD -->
+    <div id="infoCard" class="info-card">
+        <div class="info-card-actions">
+            <button id="editBtn" class="icon-btn">✏️</button>
+            <button id="deleteBtn" class="icon-btn">🗑️</button>
+        </div>
+
+        <div class="info-title" id="cardTitle"></div>
+        <div class="info-desc" id="cardDesc"></div>
+        <div class="info-group" id="cardGroup"></div>
+
+        <button id="directionBtn" class="btn-directions">
+            🧭 Get Directions
+        </button>
+        <button id="cancelRouteBtn" class="cancel-btn">
+            ❌ Cancel Route
+        </button>
+
+    </div>
+
+    <!-- ADD BUTTON -->
+    <button id="addPinBtn" class="add-pin-btn">
+        ➕ Add Pin
+    </button>
+
+    <!-- MODAL -->
+    <div id="addPinModal" class="modal">
+        <div class="modal-content">
+
+            <h3>Add New Pin</h3>
+
+            <input id="newPinName" placeholder="Name" />
+            <textarea id="newPinDesc" placeholder="Description"></textarea>
+
+            <select id="newPinCategory"></select>
+
+            <button class="save-btn" onclick="savePin()">Save Pin</button>
+            <button class="cancel-btn" onclick="closeModal()">Cancel</button>
+
+        </div>
+    </div>
+</div>
+
+
+<!-- SCRIPTS -->
+<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+<script src="app.js"></script>
+
+</body>
+</html>
