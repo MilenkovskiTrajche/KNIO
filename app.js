@@ -15,17 +15,30 @@ let tempMarker = null;
 let tempLat = null;
 let tempLng = null;
 let addMode = false;
+let justOpenedCard = false;
 
 
 // =====================
 // 1. INIT MAP
 // =====================
 function initMap() {
-    map = L.map('map').setView([41.9981, 21.4254], 13);
+const street = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png');
 
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '&copy; OpenStreetMap'
-    }).addTo(map);
+const satellite = L.tileLayer(
+    'https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png'
+);
+
+map = L.map('map', {
+    center: [41.9981, 21.4254],
+    zoom: 13,
+    layers: [street]
+});
+
+L.control.layers({
+    "🗺️ Street": street,
+    "🛰️ Satellite": satellite
+}).addTo(map);
+
 }
 
 
@@ -119,7 +132,9 @@ function addPinToMap(pin) {
         })
     }).addTo(map);
 
-    marker.on('click', () => {
+    marker.on('click', (e) => {
+        L.DomEvent.stopPropagation(e); // 🔥 FIX
+
         showCard(pin);
 
         if (activeLabel) {
@@ -129,6 +144,7 @@ function addPinToMap(pin) {
         activeLabel = label;
         activePin = pin;
     });
+
 
     markers.push({ marker, label, pin });
 }
@@ -141,6 +157,12 @@ function showCard(pin) {
     const card = document.getElementById("infoCard");
     card.style.display = "block";
 
+    justOpenedCard = true; // 🔥 KEY FIX
+
+    setTimeout(() => {
+        justOpenedCard = false;
+    }, 200);
+
     document.getElementById("cardTitle").innerText = pin.name;
     document.getElementById("cardDesc").innerText = pin.description;
     document.getElementById("cardGroup").innerText = pin.groupName;
@@ -148,7 +170,63 @@ function showCard(pin) {
     document.getElementById("directionBtn").onclick = () => {
         getDirections(pin.lat, pin.lng);
     };
+
+    document.getElementById("editBtn").addEventListener("click", function(e) {
+        e.stopPropagation();
+
+        if (!activePin) return;
+
+        openEditModal(activePin);
+    });
+
+    document.getElementById("deleteBtn").addEventListener("click", function(e) {
+        e.stopPropagation();
+
+        if (!activePin) return;
+
+        deletePin(activePin);
+    });
+
+    document.getElementById("cancelRouteBtn").addEventListener("click", function(e) {
+        e.stopPropagation();
+
+        if (routeLayer) {
+            map.removeLayer(routeLayer);
+            routeLayer = null;
+        }
+    });
+
 }
+
+async function deletePin(pin) {
+
+    if (!confirm("Delete this pin?")) return;
+
+    await fetch(`https://oracleapex.com/ords/map_project/api/pins/${pin.id}`, {
+        method: "DELETE"
+    });
+
+    document.getElementById("infoCard").style.display = "none";
+
+    loadPins();
+}
+
+function openEditModal(pin) {
+    console.log("EDIT CLICKED", pin); // 👈 check
+
+    document.getElementById("addPinModal").style.display = "block";
+
+    document.getElementById("newPinName").value = pin.name;
+    document.getElementById("newPinDesc").value = pin.description;
+    document.getElementById("newPinCategory").value = pin.groupId;
+
+    tempLat = pin.lat;
+    tempLng = pin.lng;
+
+    activePin = pin;
+}
+
+
 
 
 // =====================
@@ -263,8 +341,10 @@ function fillCategoryDropdown() {
 // =====================
 document.getElementById("addPinBtn").onclick = () => {
     addMode = true;
-    alert("Click on map to place pin");
+
+    alert("Click anywhere on the map and drag pin if needed");
 };
+
 
 
 function openModal() {
@@ -301,17 +381,33 @@ async function savePin() {
         lng: tempLng
     };
 
-    await fetch("https://oracleapex.com/ords/map_project/api/pins/list", {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/json"
-        },
-        body: JSON.stringify(payload)
-    });
+    if (activePin) {
+        // EDIT
+        await fetch(`https://oracleapex.com/ords/map_project/api/pins/${activePin.id}`, {
+            method: "PUT",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify(payload)
+        });
+
+        activePin = null;
+
+    } else {
+        // CREATE
+        await fetch("https://oracleapex.com/ords/map_project/api/pins/list", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify(payload)
+        });
+    }
 
     closeModal();
     loadPins();
 }
+
 
 // =====================
 // INIT APP
@@ -336,27 +432,45 @@ map.on('zoomend', () => {
     });
 });
 
-// =====================
-// 14. CLOSE CARD ON MAP CLICK
-// =====================
-map.on('click', () => {
-    document.getElementById("infoCard").style.display = "none";
-});
 map.on('click', function(e) {
 
-    if (!addMode) return;
+    if (justOpenedCard) return;
 
-    tempLat = e.latlng.lat;
-    tempLng = e.latlng.lng;
+    // ADD MODE
+    if (addMode) {
 
-    if (tempMarker) {
-        map.removeLayer(tempMarker);
+        tempLat = e.latlng.lat;
+        tempLng = e.latlng.lng;
+
+        if (tempMarker) {
+            map.removeLayer(tempMarker);
+        }
+
+        tempMarker = L.marker([tempLat, tempLng], {
+            draggable: true
+        }).addTo(map);
+
+        tempMarker.on('dragend', function(event) {
+            const pos = event.target.getLatLng();
+            tempLat = pos.lat;
+            tempLng = pos.lng;
+        });
+
+        // 🔥 NEW CONFIRM FLOW
+        setTimeout(() => {
+            const confirmAdd = confirm("Place pin here?");
+
+            if (confirmAdd) {
+                openModal();
+                addMode = false;
+            }
+        }, 100);
+
+        return;
     }
 
-    tempMarker = L.marker([tempLat, tempLng], {
-        draggable: true
-    }).addTo(map);
-
-    openModal();
-    addMode = false;
+    // NORMAL CLICK → CLOSE CARD
+    document.getElementById("infoCard").style.display = "none";
 });
+
+
