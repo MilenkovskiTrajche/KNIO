@@ -167,6 +167,16 @@ function showCard(pin) {
     document.getElementById("cardDesc").innerText = pin.description;
     document.getElementById("cardGroup").innerText = pin.groupName;
 
+    const workingHoursElem = document.getElementById("cardWorkingHours");
+    if (workingHoursElem) {
+        if (pin.opening && pin.closing) {
+            workingHoursElem.innerText = `🕒 Работно време: ${pin.opening} - ${pin.closing}`;
+            workingHoursElem.style.display = "block";
+        } else {
+            workingHoursElem.style.display = "none";
+        }
+    }
+
     document.getElementById("directionBtn").onclick = () => {
         getDirections(pin.lat, pin.lng);
     };
@@ -219,6 +229,10 @@ function openEditModal(pin) {
     document.getElementById("newPinName").value = pin.name;
     document.getElementById("newPinDesc").value = pin.description;
     document.getElementById("newPinCategory").value = pin.groupId;
+
+
+    document.getElementById("newPinOpening").value = pin.opening || "";
+    document.getElementById("newPinClosing").value = pin.closing || "";
 
     tempLat = pin.lat;
     tempLng = pin.lng;
@@ -357,6 +371,9 @@ function closeModal() {
     document.getElementById("newPinName").value = "";
     document.getElementById("newPinDesc").value = "";
 
+    document.getElementById("newPinOpening").value = "";
+    document.getElementById("newPinClosing").value = "";
+
     if (tempMarker) {
         map.removeLayer(tempMarker);
         tempMarker = null;
@@ -373,12 +390,17 @@ async function savePin() {
     const desc = document.getElementById("newPinDesc").value;
     const groupId = document.getElementById("newPinCategory").value;
 
+    const opening = document.getElementById("newPinOpening").value;
+    const closing = document.getElementById("newPinClosing").value;
+
     const payload = {
         name,
         description: desc,
         group_id: parseInt(groupId),
         lat: tempLat,
-        lng: tempLng
+        lng: tempLng,
+        opening: opening,    
+        closing: closing
     };
 
     if (activePin) {

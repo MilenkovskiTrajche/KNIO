@@ -29,6 +29,7 @@
         <div class="info-title" id="cardTitle"></div>
         <div class="info-desc" id="cardDesc"></div>
         <div class="info-group" id="cardGroup"></div>
+        <div class="info-hours" id="cardWorkingHours" style="margin-bottom: 12px; font-size: 13px; color: #2c7da0;"></div>
 
         <button id="directionBtn" class="btn-directions">
             🧭 Get Directions
@@ -54,6 +55,11 @@
             <textarea id="newPinDesc" placeholder="Description"></textarea>
 
             <select id="newPinCategory"></select>
+
+            <div style="display: flex; gap: 10px; margin: 10px 0;">
+                <input type="time" id="newPinOpening" placeholder="Отворање" style="flex:1" />
+                <input type="time" id="newPinClosing" placeholder="Затворање" style="flex:1" />
+            </div>  
 
             <button class="save-btn" onclick="savePin()">Save Pin</button>
             <button class="cancel-btn" onclick="closeModal()">Cancel</button>
