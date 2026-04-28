@@ -83,6 +83,29 @@ body {
     margin-bottom: 12px;
 }
 
+.info-hours {
+    background: #f0f4f8;
+    padding: 10px 12px;
+    border-radius: 12px;
+    font-size: 13px;
+    color: #2c7da0;
+    margin-bottom: 12px;
+    text-align: center;
+    font-weight: 500;
+}
+
+.info-hours-warning {
+    background: #fff3e0 !important;
+    border-left: 4px solid #e67e22;
+}
+
+.info-hours-warning-text {
+    color: #e67e22;
+    font-weight: bold;
+    display: inline-block;
+    margin-top: 5px;
+}
+
 /* BUTTONS */
 .btn-directions {
     width: 100%;
@@ -186,6 +209,8 @@ body {
     font-size: 14px;
 
     transition: 0.2s;
+
+    box-sizing: border-box;
 }
 
 .modal-content input:focus,
@@ -194,6 +219,78 @@ body {
     outline: none;
     border-color: black;
     box-shadow: 0 0 0 2px rgba(0,0,0,0.1);
+}
+
+/* CHIPS */
+.chips-container {
+    margin: 10px 0;
+    background: #f8f9fa;
+    border-radius: 16px;
+    padding: 15px;
+}
+
+.chips-label {
+    font-weight: 600;
+    display: block;
+    margin-bottom: 12px;
+    color: #333;
+}
+
+.chips-wrapper {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.chip {
+    background: #f0f4f8;
+    padding: 8px 16px;
+    border-radius: 32px;
+    cursor: pointer;
+    transition: 0.2s;
+    font-size: 14px;
+    user-select: none;
+    display: inline-block;
+}
+
+.chip:hover {
+    background: #e0e7ff;
+    transform: translateY(-1px);
+}
+
+.chip.active {
+    background: #2c7da0;
+    color: white;
+}
+
+/* WORKING HOURS */
+.time-row {
+    display: flex;
+    gap: 10px;
+    margin: 10px 0;
+}
+
+.time-simple {
+    flex: 1;
+    background: #f8f9fa;
+    border: 1px solid #e0e0e0;
+    border-radius: 12px;
+    padding: 12px;
+    font-size: 14px;
+    text-align: center;
+    font-family: monospace;
+    letter-spacing: 1px;
+}
+
+.time-simple:focus {
+    outline: none;
+    border-color: #aaa;
+    background: white;
+}
+
+.time-simple::placeholder {
+    color: #aaa;
+    font-family: monospace;
 }
 
 /* BUTTONS */

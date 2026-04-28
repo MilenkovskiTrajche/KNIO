@@ -55,11 +55,26 @@
             <textarea id="newPinDesc" placeholder="Description"></textarea>
 
             <select id="newPinCategory"></select>
+            
+            <div class="chips-container">
+                <label class="chips-label">📅 Работни денови</label>
+                <div class="chips-wrapper">
+                    <div class="chip" data-day="mon">Пон</div>
+                    <div class="chip" data-day="tue">Вто</div>
+                    <div class="chip" data-day="wed">Сре</div>
+                    <div class="chip" data-day="thu">Чет</div>
+                    <div class="chip" data-day="fri">Пет</div>
+                    <div class="chip" data-day="sat">Саб</div>
+                    <div class="chip" data-day="sun">Нед</div>
+                </div>
+            </div>
 
-            <div style="display: flex; gap: 10px; margin: 10px 0;">
-                <input type="time" id="newPinOpening" placeholder="Отворање" style="flex:1" />
-                <input type="time" id="newPinClosing" placeholder="Затворање" style="flex:1" />
-            </div>  
+            <input type="hidden" id="selectedDays" value="">
+
+            <div class="time-row">
+                <input type="text" id="newPinOpening" placeholder="Отвара" class="time-simple" />
+                <input type="text" id="newPinClosing" placeholder="Затвара" class="time-simple"/>
+            </div> 
 
             <button class="save-btn" onclick="savePin()">Save Pin</button>
             <button class="cancel-btn" onclick="closeModal()">Cancel</button>

@@ -96,7 +96,10 @@ function drawPins(pins) {
             groupId: pin.group_id,
             groupName: pin.group_name,
             lat: pin.lat,
-            lng: pin.lng
+            lng: pin.lng,
+            opening_time: pin.opening_time,
+            closing_time: pin.closing_time,
+            working_days: pin.working_days
         });
     });
 }
@@ -168,13 +171,22 @@ function showCard(pin) {
     document.getElementById("cardGroup").innerText = pin.groupName;
 
     const workingHoursElem = document.getElementById("cardWorkingHours");
-    if (workingHoursElem) {
-        if (pin.opening && pin.closing) {
-            workingHoursElem.innerText = `🕒 Работно време: ${pin.opening} - ${pin.closing}`;
-            workingHoursElem.style.display = "block";
-        } else {
-            workingHoursElem.style.display = "none";
+    if (workingHoursElem && pin.opening_time && pin.closing_time) {
+        let daysText = pin.working_days ? `${pin.working_days} · ` : '';
+        
+        const closeStatus = checkClosingSoon(pin.opening_time, pin.closing_time);
+        
+        workingHoursElem.classList.remove('info-hours-warning');
+        
+        let warningHtml = '';
+        if (closeStatus && closeStatus.isClosingSoon) {
+            workingHoursElem.classList.add('info-hours-warning');
+            warningHtml = `<br><span class="info-hours-warning-text">⚠️ ${closeStatus.message}</span>`;
         }
+        workingHoursElem.innerHTML = `🕒 ${daysText}${pin.opening_time} - ${pin.closing_time}${warningHtml}`;
+        workingHoursElem.style.display = "block";
+    } else if (workingHoursElem) {
+        workingHoursElem.style.display = "none";
     }
 
     document.getElementById("directionBtn").onclick = () => {
@@ -205,7 +217,6 @@ function showCard(pin) {
             routeLayer = null;
         }
     });
-
 }
 
 async function deletePin(pin) {
@@ -229,10 +240,15 @@ function openEditModal(pin) {
     document.getElementById("newPinName").value = pin.name;
     document.getElementById("newPinDesc").value = pin.description;
     document.getElementById("newPinCategory").value = pin.groupId;
+    document.getElementById("newPinOpening").value = pin.opening_time || "";
+    document.getElementById("newPinClosing").value = pin.closing_time || "";
 
+    const chips = document.querySelectorAll('.chip');
+    chips.forEach(chip => chip.classList.remove('active'));
 
-    document.getElementById("newPinOpening").value = pin.opening || "";
-    document.getElementById("newPinClosing").value = pin.closing || "";
+    if (pin.working_days) {
+        setSelectedDaysFromText(pin.working_days);
+    }
 
     tempLat = pin.lat;
     tempLng = pin.lng;
@@ -389,9 +405,11 @@ async function savePin() {
     const name = document.getElementById("newPinName").value;
     const desc = document.getElementById("newPinDesc").value;
     const groupId = document.getElementById("newPinCategory").value;
-
     const opening = document.getElementById("newPinOpening").value;
     const closing = document.getElementById("newPinClosing").value;
+
+    const selectedDays = getSelectedDays();
+    const workingDaysText = getWorkingDaysText(selectedDays);
 
     const payload = {
         name,
@@ -399,8 +417,9 @@ async function savePin() {
         group_id: parseInt(groupId),
         lat: tempLat,
         lng: tempLng,
-        opening: opening,    
-        closing: closing
+        opening_time: opening,    
+        closing_time: closing,
+        working_days: workingDaysText
     };
 
     if (activePin) {
@@ -495,4 +514,156 @@ map.on('click', function(e) {
     document.getElementById("infoCard").style.display = "none";
 });
 
+// Convert selected days array to readable text (e.g. "Пон - Пет")
+function getWorkingDaysText(selectedDays) {
+    const dayMap = {
+        'mon': 'Пон', 'tue': 'Вто', 'wed': 'Сре',
+        'thu': 'Чет', 'fri': 'Пет', 'sat': 'Саб', 'sun': 'Нед'
+    };
+    
+    const daysOrder = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'];
+    const selected = daysOrder.filter(day => selectedDays.includes(day));
+    
+    if (selected.length === 0) return '❌ Не е наведено';
+    if (selected.length === 7) return 'Секој ден';
+    
+    let ranges = [];
+    let start = selected[0];
+    let end = selected[0];
+    
+    for (let i = 1; i < selected.length; i++) {
+        const prevIndex = daysOrder.indexOf(selected[i-1]);
+        const currIndex = daysOrder.indexOf(selected[i]);
+        
+        if (currIndex === prevIndex + 1) {
+            end = selected[i];
+        } else {
+            ranges.push({ start: dayMap[start], end: dayMap[end] });
+            start = selected[i];
+            end = selected[i];
+        }
+    }
+    ranges.push({ start: dayMap[start], end: dayMap[end] });
+    
+    return ranges.map(range => range.start === range.end ? range.start : `${range.start} - ${range.end}`).join(', ');
+}
 
+// Set active chips based on saved working days text
+function setSelectedDaysFromText(workingDaysText) {
+    if (!workingDaysText) return;
+    
+    const chips = document.querySelectorAll('.chip');
+    chips.forEach(chip => chip.classList.remove('active'));
+    
+    const dayMap = {
+        'пон': 'mon', 'понеделник': 'mon',
+        'вто': 'tue', 'вторник': 'tue',
+        'сре': 'wed', 'среда': 'wed',
+        'чет': 'thu', 'четврток': 'thu',
+        'пет': 'fri', 'петок': 'fri',
+        'саб': 'sat', 'сабота': 'sat',
+        'нед': 'sun', 'недела': 'sun'
+    };
+    
+    const lowerText = workingDaysText.toLowerCase();
+    
+    const rangeMatch = lowerText.match(/([а-я]+)\s*-\s*([а-я]+)/);
+    if (rangeMatch) {
+        const startDay = dayMap[rangeMatch[1]];
+        const endDay = dayMap[rangeMatch[2]];
+        const daysOrder = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'];
+        const startIndex = daysOrder.indexOf(startDay);
+        const endIndex = daysOrder.indexOf(endDay);
+        
+        if (startIndex !== -1 && endIndex !== -1) {
+            for (let i = startIndex; i <= endIndex; i++) {
+                const chip = document.querySelector(`.chip[data-day="${daysOrder[i]}"]`);
+                if (chip) chip.classList.add('active');
+            }
+        }
+    }
+    
+    updateSelectedDays();
+}
+
+// Update hidden input with selected days
+function updateSelectedDays() {
+    const activeChips = document.querySelectorAll('.chip.active');
+    const days = Array.from(activeChips).map(chip => chip.dataset.day);
+    const selectedDaysInput = document.getElementById('selectedDays');
+    if (selectedDaysInput) {
+        selectedDaysInput.value = days.join(',');
+    }
+}
+
+// Get selected days from hidden input
+function getSelectedDays() {
+    const selectedDaysInput = document.getElementById('selectedDays');
+    if (selectedDaysInput) {
+        const days = selectedDaysInput.value;
+        return days ? days.split(',') : [];
+    }
+    return [];
+}
+
+function checkClosingSoon(openingTime, closingTime) {
+    if (!openingTime || !closingTime) return null;
+
+    const now = new Date();
+    const currentHours = now.getHours();
+    const currentMinutes = now.getMinutes();
+    const currentTotal = currentHours * 60 + currentMinutes;
+    
+    const [openHours, openMinutes] = openingTime.split(':').map(Number);
+    const [closeHours, closeMinutes] = closingTime.split(':').map(Number);
+    
+    const openTotal = openHours * 60 + openMinutes;
+    const closeTotal = closeHours * 60 + closeMinutes;
+    
+    if (currentTotal < openTotal || currentTotal > closeTotal) {
+        return {
+            isClosingSoon: false,
+            message: null,
+            status: "closed"
+        };
+    }
+    
+    const minutesUntilClose = closeTotal - currentTotal;
+    
+    if (minutesUntilClose >= 0 && minutesUntilClose <= 60) {
+        return {
+            isClosingSoon: true,
+            minutesLeft: minutesUntilClose,
+            message: `⚠️ Затвора за ${minutesUntilClose} минути!`
+        };
+    }
+    
+    return {
+        isClosingSoon: false,
+        message: null,
+        status: "open"
+    };
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    const chips = document.querySelectorAll('.chip');
+    if (chips.length > 0) {
+        chips.forEach(chip => {
+            chip.addEventListener('click', () => {
+                chip.classList.toggle('active');
+                updateSelectedDays();
+            });
+        });
+    }
+    
+    const timeInputs = document.querySelectorAll('.time-simple');
+    timeInputs.forEach(input => {
+        input.addEventListener('input', function(e) {
+            let value = this.value.replace(/\D/g, '');
+            if (value.length >= 2) {
+                value = value.slice(0,2) + ':' + value.slice(2,4);
+            }
+            this.value = value.slice(0,5);
+        });
+    });
+});
