@@ -1,87 +1,248 @@
 <!DOCTYPE html>
-<html>
-<head>
-    <title>Map App</title>
+<html lang="mk">
 
-    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<head>
+    <title>Донации Скопје | Хуманитарна Платформа</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
     <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
     <link rel="stylesheet" href="styles.css" />
 </head>
 
 <body>
-    
-<div id="ui-container">
-
-    <!-- SIDEBAR -->
-    <div id="sidebar" class="sidebar"></div>
-
-    <!-- MAP -->
-    <div id="map"></div>
-
-    <!-- INFO CARD -->
-    <div id="infoCard" class="info-card">
-        <div class="info-card-actions">
-            <button id="editBtn" class="icon-btn">✏️</button>
-            <button id="deleteBtn" class="icon-btn">🗑️</button>
+    <!-- HEADER -->
+    <header class="site-header">
+        <div class="container header-flex">
+            <div class="logo">
+                <h1>Донации <span>Скопје</span></h1>
+            </div>
+            <nav class="main-nav">
+                <ul>
+                    <li><a href="#pocetna">Почетна</a></li>
+                    <li><a href="#organizacii">Организации</a></li>
+                    <li><a href="#vesti">Активности</a></li>
+                    <li><a href="#kontakt">Контакт</a></li>
+                </ul>
+            </nav>
+            <div class="header-right">
+                <button class="btn-sm">Најава</button>
+            </div>
         </div>
+    </header>
 
-        <div class="info-title" id="cardTitle"></div>
-        <div class="info-desc" id="cardDesc"></div>
-        <div class="info-group" id="cardGroup"></div>
-        <div class="info-hours" id="cardWorkingHours" style="margin-bottom: 12px; font-size: 13px; color: #2c7da0;"></div>
-
-        <button id="directionBtn" class="btn-directions">
-            🧭 Get Directions
-        </button>
-        <button id="cancelRouteBtn" class="cancel-btn">
-            ❌ Cancel Route
-        </button>
-
-    </div>
-
-    <!-- ADD BUTTON -->
-    <button id="addPinBtn" class="add-pin-btn">
-        ➕ Add Pin
-    </button>
-
-    <!-- MODAL -->
-    <div id="addPinModal" class="modal">
-        <div class="modal-content">
-
-            <h3>Add New Pin</h3>
-
-            <input id="newPinName" placeholder="Name" />
-            <textarea id="newPinDesc" placeholder="Description"></textarea>
-
-            <select id="newPinCategory"></select>
-            
-            <div class="chips-container">
-                <label class="chips-label">📅 Работни денови</label>
-                <div class="chips-wrapper">
-                    <div class="chip" data-day="mon">Пон</div>
-                    <div class="chip" data-day="tue">Вто</div>
-                    <div class="chip" data-day="wed">Сре</div>
-                    <div class="chip" data-day="thu">Чет</div>
-                    <div class="chip" data-day="fri">Пет</div>
-                    <div class="chip" data-day="sat">Саб</div>
-                    <div class="chip" data-day="sun">Нед</div>
+    <main>
+        <!-- HERO -->
+        <section id="pocetna" class="hero-section">
+            <div class="container">
+                <div class="hero-content">
+                    <h1>Донирај</h1>
+                    <p>Единствена платформа за транспарентно донирање и поддршка на социјално загрозените семејства во
+                        Скопје.</p>
+                    <div class="hero-btns">
+                        <button class="btn-lg">Донирај Веднаш</button>
+                        <button class="btn-lg outline">Дознај Повеќе</button>
+                    </div>
                 </div>
             </div>
+        </section>
+        <!-- STATISTICS -->
+        <section class="stats-bar">
+            <div class="container stats-grid">
+                <div class="stat-item">
+                    <span class="stat-num">1,250+</span>
+                    <span class="stat-txt">Оброци месечно</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-num">45</span>
+                    <span class="stat-txt">Активни акции</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-num">800+</span>
+                    <span class="stat-txt">Регистрирани волонтери</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-num">12</span>
+                    <span class="stat-txt">Општини опфатени</span>
+                </div>
+            </div>
+        </section>
 
-            <input type="hidden" id="selectedDays" value="">
+        <div id="organizacii" class="container main-layout">
+            <section class="map-section">
+                <div class="section-title">
+                    <h2>Мапа на активни пунктови</h2>
+                </div>
 
-            <div class="time-row">
-                <input type="text" id="newPinOpening" placeholder="Отвара" class="time-simple" />
-                <input type="text" id="newPinClosing" placeholder="Затвара" class="time-simple"/>
-            </div> 
+                <div id="ui-container">
 
-            <button class="save-btn" onclick="savePin()">Save Pin</button>
-            <button class="cancel-btn" onclick="closeModal()">Cancel</button>
+                    <!-- SIDEBAR -->
+                    <div id="sidebar" class="sidebar"></div>
 
+                    <!-- MAP -->
+                    <div id="map"></div>
+
+                    <!-- INFO CARD -->
+                    <div id="infoCard" class="info-card">
+                        <div class="info-card-actions">
+                            <button id="editBtn" class="icon-btn">✏️</button>
+                            <button id="deleteBtn" class="icon-btn">🗑️</button>
+                        </div>
+
+                        <div class="info-title" id="cardTitle"></div>
+                        <div class="info-desc" id="cardDesc"></div>
+                        <div class="info-group" id="cardGroup"></div>
+                        <div class="info-hours" id="cardWorkingHours"
+                            style="margin-bottom: 12px; font-size: 13px; color: #2c7da0;"></div>
+
+                        <button id="directionBtn" class="btn-directions">
+                            🧭 Get Directions
+                        </button>
+                        <button id="cancelRouteBtn" class="cancel-btn">
+                            ❌ Cancel Route
+                        </button>
+
+                    </div>
+
+                    <!-- ADD BUTTON -->
+                    <button id="addPinBtn" class="add-pin-btn">
+                        ➕ Add Pin
+                    </button>
+
+                    <!-- MODAL -->
+                    <div id="addPinModal" class="modal">
+                        <div class="modal-content">
+
+                            <h3>Add New Pin</h3>
+
+                            <input id="newPinName" placeholder="Name" />
+                            <textarea id="newPinDesc" placeholder="Description"></textarea>
+
+                            <select id="newPinCategory"></select>
+
+                            <div class="chips-container">
+                                <label class="chips-label">📅 Работни денови</label>
+                                <div class="chips-wrapper">
+                                    <div class="chip" data-day="mon">Пон</div>
+                                    <div class="chip" data-day="tue">Вто</div>
+                                    <div class="chip" data-day="wed">Сре</div>
+                                    <div class="chip" data-day="thu">Чет</div>
+                                    <div class="chip" data-day="fri">Пет</div>
+                                    <div class="chip" data-day="sat">Саб</div>
+                                    <div class="chip" data-day="sun">Нед</div>
+                                </div>
+                            </div>
+
+                            <input type="hidden" id="selectedDays" value="">
+
+                            <div class="time-row">
+                                <input type="text" id="newPinOpening" placeholder="Отвара" class="time-simple" />
+                                <input type="text" id="newPinClosing" placeholder="Затвара" class="time-simple" />
+                            </div>
+
+                            <button class="save-btn" onclick="savePin()">Save Pin</button>
+                            <button class="cancel-btn" onclick="closeModal()">Cancel</button>
+
+                        </div>
+                    </div>
+                </div>
+            </section>
+            <!-- LIST OF ORGANIZATIONS-->
+            <aside class="list-section">
+                <div class="section-title">
+                    <h2>Организации</h2>
+                </div>
+                <div class="org-scroll-list">
+                    <article class="org-card highlight">
+                        <h3>Црвен Крст Скопје</h3>
+                        <p>Храна, Облека, Хигиена</p>
+                        <span class="loc-tag">Центар</span>
+                    </article>
+                    <article class="org-card">
+                        <h3>Здружение "Хуманост"</h3>
+                        <p>Парична помош, Лекови</p>
+                        <span class="loc-tag">Карпош</span>
+                    </article>
+                    <article class="org-card">
+                        <h3>Народна Кујна</h3>
+                        <p>Готвени оброци секој ден</p>
+                        <span class="loc-tag">Аеродром</span>
+                    </article>
+                    <article class="org-card">
+                        <h3>Ретвитни Оброк</h3>
+                        <p>Секоја сабота кај Мајка Тереза</p>
+                        <span class="loc-tag">Центар</span>
+                    </article>
+                </div>
+            </aside>
+        </div>
+
+    <!-- GALLERY -->
+    <section id="vesti" class="gallery-section">
+        <div class="container">
+            <div class="section-title">
+                <h2>Моменти од терен</h2>
+            </div>
+            <div class="image-grid">
+                <div class="img-box">
+                    <img src="images/konekt.jpg" alt="Хуманитарна акција 1">
+                </div>
+                <div class="img-box">
+                    <img src="images/nadez.jpg" alt="Хуманитарна акција 2">
+                </div>
+                <div class="img-box">
+                    <img src="images/ckrm-fb-image.jpg" alt="Хуманитарна акција 3">
+                </div>
+                <div class="img-box">
+                    <img src="images/sos-detsko-selo.jpg" alt="Хуманитарна акција 4">
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- VOLONTEER -->
+    <section class="volunteer-cta">
+        <div class="container v-flex">
+            <div class="v-text">
+                <h2>Стани дел од промената</h2>
+                <p>Твоето време е највредниот подарок што можеш да го дадеш. Приклучи се на нашата волонтерска мрежа.</p>
+            </div>
+            <div class="v-action">
+                <button class="btn-lg dark">Аплицирај за волонтер</button>
+            </div>
+        </div>
+    </section>
+</main>
+
+<!-- FOOTER -->
+<footer id="kontakt" class="site-footer">
+    <div class="container footer-grid">
+        <div class="footer-about">
+            <h3>Донации Скопје</h3>
+            <p>Ние сме централен регистар за хуманитарна помош во Скопје. Нашата цел е секоја донација да стигне во вистинските раце брзо и ефикасно.</p>
+        </div>
+        <div class="footer-nav">
+            <h4>Брзи Линкови</h4>
+            <ul>
+                <li><a href="#">За нас</a></li>
+                <li><a href="#">Како да донирам?</a></li>
+                <li><a href="#">Најчести прашања</a></li>
+                <li><a href="#">Вести</a></li>
+            </ul>
+        </div>
+        <div class="footer-contact">
+            <h4>Контакт</h4>
+            <p>Е-пошта: kontakt@donaciiskopje.mk</p>
+            <p>Тел: +389 2 3123 456</p>
+            <p>Адреса: бул. Партизански Одреди бб, Скопје</p>
         </div>
     </div>
-</div>
+    <div class="footer-bottom">
+        <div class="container">
+            <p>&copy; 2026 Донации Скопје. Платформа со отворен код. Сите права се задржани.</p>
+        </div>
+    </div>
+</footer>
 
 
 <!-- SCRIPTS -->
@@ -89,4 +250,5 @@
 <script src="app.js"></script>
 
 </body>
+
 </html>
