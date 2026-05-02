@@ -324,46 +324,36 @@ async function loadCategories() {
 
     categories = data.items;
 
-    renderCategories();
     fillCategoryDropdown();
 }
 
-
-// sidebar
-function renderCategories() {
-    const sidebar = document.getElementById("sidebar");
-
-    sidebar.innerHTML = `
-        <div class="category-item" onclick="filterPins(null)">
-            🌍 All
-        </div>
-    `;
-
-    categories.forEach(cat => {
-        const div = document.createElement("div");
-        div.className = "category-item";
-        div.innerText = cat.name;
-
-        div.onclick = () => filterPins(cat.id);
-
-        sidebar.appendChild(div);
-    });
-}
-
-
 // dropdown
 function fillCategoryDropdown() {
-    const select = document.getElementById("newPinCategory");
+    const select = document.getElementById("categoryFilter");
 
-    select.innerHTML = "";
+    if (!select) {
+        console.error("Dropdown not found!");
+        return;
+    }
+
+    select.innerHTML = `<option value="">🌍 Сите категории</option>`;
 
     categories.forEach(cat => {
+        console.log("Adding category:", cat); // 👈 DEBUG
+
         const opt = document.createElement("option");
         opt.value = cat.id;
         opt.innerText = cat.name;
         select.appendChild(opt);
     });
+
+    select.onchange = function() {
+        const selected = this.value;
+        filterPins(selected ? parseInt(selected) : null);
+    };
 }
+
+
 
 
 // =====================
