@@ -174,7 +174,7 @@ function showCard(pin) {
     if (workingHoursElem && pin.opening_time && pin.closing_time) {
         let daysText = pin.working_days ? `${pin.working_days} · ` : '';
 
-        const closeStatus = checkClosingSoon(pin.opening_time, pin.closing_time);
+        const closeStatus = checkClosingSoon(pin.opening_time, pin.closing_time, pin.working_days);
 
         workingHoursElem.classList.remove('info-hours-warning');
 
@@ -183,7 +183,11 @@ function showCard(pin) {
 
         if (closeStatus) {
             if (closeStatus.status === "closed") {
-                statusHtml = '<br><span style="color: #e74c3c;">🔴 Затворено</span>';
+                if (closeStatus.reason === "closed_day") {
+                    statusHtml = '<br><span style="color: #e74c3c;">🔴 Затворено (неработен ден)</span>';
+                } else {
+                    statusHtml = '<br><span style="color: #e74c3c;">🔴 Затворено</span>';
+                }
             } else if (closeStatus.isClosingSoon) {
                 workingHoursElem.classList.add('info-hours-warning');
                 warningHtml = `<br><span class="info-hours-warning-text">⚠️ ${closeStatus.message}</span>`;
@@ -621,8 +625,57 @@ function getSelectedDays() {
     return [];
 }
 
-function checkClosingSoon(openingTime, closingTime) {
+function isTodayWorkingDay(workingDaysText) {
+    if (!workingDaysText) return true; 
+    
+    if (workingDaysText === "Секој ден" || workingDaysText === "❌ Не е наведено") {
+        return true;
+    }
+    
+    const today = new Date();
+    const daysInMacedonian = ['нед', 'пон', 'вто', 'сре', 'чет', 'пет', 'саб'];
+    const todayName = daysInMacedonian[today.getDay()]; 
+    
+    const daysList = [];
+    const dayMap = {
+        'пон': 'пон', 'вто': 'вто', 'сре': 'сре',
+        'чет': 'чет', 'пет': 'пет', 'саб': 'саб', 'нед': 'нед'
+    };
+    
+    const rangeMatch = workingDaysText.match(/([А-я]+)\s*-\s*([А-я]+)/i);
+    if (rangeMatch) {
+        const startDay = rangeMatch[1].toLowerCase();
+        const endDay = rangeMatch[2].toLowerCase();
+        const daysOrder = ['пон', 'вто', 'сре', 'чет', 'пет', 'саб', 'нед'];
+        const startIndex = daysOrder.indexOf(startDay);
+        const endIndex = daysOrder.indexOf(endDay);
+        
+        if (startIndex !== -1 && endIndex !== -1) {
+            for (let i = startIndex; i <= endIndex; i++) {
+                daysList.push(daysOrder[i]);
+            }
+        }
+    } else {
+        const parts = workingDaysText.toLowerCase().split(/[\s,]+/);
+        parts.forEach(part => {
+            if (dayMap[part]) daysList.push(dayMap[part]);
+        });
+    }
+    
+    return daysList.includes(todayName);
+}
+
+function checkClosingSoon(openingTime, closingTime, workingDaysText) {
     if (!openingTime || !closingTime) return null;
+
+    if (!isTodayWorkingDay(workingDaysText)) {
+        return {
+            isClosingSoon: false,
+            message: null,
+            status: "closed",
+            reason: "closed_day"
+        };
+    }
 
     const now = new Date();
     const currentHours = now.getHours();
