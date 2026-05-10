@@ -22,22 +22,22 @@ let justOpenedCard = false;
 // 1. INIT MAP
 // =====================
 function initMap() {
-const street = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png');
+    const street = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png');
 
-const satellite = L.tileLayer(
-    'https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png'
-);
+    const satellite = L.tileLayer(
+        'https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png'
+    );
 
-map = L.map('map', {
-    center: [41.9981, 21.4254],
-    zoom: 13,
-    layers: [street]
-});
+    map = L.map('map', {
+        center: [41.9981, 21.4254],
+        zoom: 13,
+        layers: [street]
+    });
 
-L.control.layers({
-    "🗺️ Street": street,
-    "🛰️ Satellite": satellite
-}).addTo(map);
+    L.control.layers({
+        "🗺️ Street": street,
+        "🛰️ Satellite": satellite
+    }).addTo(map);
 
 }
 
@@ -160,7 +160,7 @@ function showCard(pin) {
     const card = document.getElementById("infoCard");
     card.style.display = "block";
 
-    justOpenedCard = true; // 🔥 KEY FIX
+    justOpenedCard = true;
 
     setTimeout(() => {
         justOpenedCard = false;
@@ -173,17 +173,26 @@ function showCard(pin) {
     const workingHoursElem = document.getElementById("cardWorkingHours");
     if (workingHoursElem && pin.opening_time && pin.closing_time) {
         let daysText = pin.working_days ? `${pin.working_days} · ` : '';
-        
+
         const closeStatus = checkClosingSoon(pin.opening_time, pin.closing_time);
-        
+
         workingHoursElem.classList.remove('info-hours-warning');
-        
+
+        let statusHtml = '';
         let warningHtml = '';
-        if (closeStatus && closeStatus.isClosingSoon) {
-            workingHoursElem.classList.add('info-hours-warning');
-            warningHtml = `<br><span class="info-hours-warning-text">⚠️ ${closeStatus.message}</span>`;
+
+        if (closeStatus) {
+            if (closeStatus.status === "closed") {
+                statusHtml = '<br><span style="color: #e74c3c;">🔴 Затворено</span>';
+            } else if (closeStatus.isClosingSoon) {
+                workingHoursElem.classList.add('info-hours-warning');
+                warningHtml = `<br><span class="info-hours-warning-text">⚠️ ${closeStatus.message}</span>`;
+            } else {
+                statusHtml = '<br><span style="color: #27ae60;">🟢 Отворено</span>';
+            }
         }
-        workingHoursElem.innerHTML = `🕒 ${daysText}${pin.opening_time} - ${pin.closing_time}${warningHtml}`;
+
+        workingHoursElem.innerHTML = `🕒 ${daysText}${pin.opening_time} - ${pin.closing_time}${statusHtml}${warningHtml}`;
         workingHoursElem.style.display = "block";
     } else if (workingHoursElem) {
         workingHoursElem.style.display = "none";
@@ -193,7 +202,7 @@ function showCard(pin) {
         getDirections(pin.lat, pin.lng);
     };
 
-    document.getElementById("editBtn").addEventListener("click", function(e) {
+    document.getElementById("editBtn").addEventListener("click", function (e) {
         e.stopPropagation();
 
         if (!activePin) return;
@@ -201,7 +210,7 @@ function showCard(pin) {
         openEditModal(activePin);
     });
 
-    document.getElementById("deleteBtn").addEventListener("click", function(e) {
+    document.getElementById("deleteBtn").addEventListener("click", function (e) {
         e.stopPropagation();
 
         if (!activePin) return;
@@ -209,7 +218,7 @@ function showCard(pin) {
         deletePin(activePin);
     });
 
-    document.getElementById("cancelRouteBtn").addEventListener("click", function(e) {
+    document.getElementById("cancelRouteBtn").addEventListener("click", function (e) {
         e.stopPropagation();
 
         if (routeLayer) {
@@ -325,6 +334,7 @@ async function loadCategories() {
     categories = data.items;
 
     fillCategoryDropdown();
+    fillModalCategoryDropdown();
 }
 
 // dropdown
@@ -347,14 +357,29 @@ function fillCategoryDropdown() {
         select.appendChild(opt);
     });
 
-    select.onchange = function() {
+    select.onchange = function () {
         const selected = this.value;
         filterPins(selected ? parseInt(selected) : null);
     };
 }
 
+function fillModalCategoryDropdown() {
+    const modalSelect = document.getElementById("newPinCategory");
+    if (!modalSelect) {
+        console.error("Modal category dropdown not found!");
+        return;
+    }
 
+    modalSelect.innerHTML = "";
 
+    categories.forEach(cat => {
+        const opt = document.createElement("option");
+        opt.value = cat.id;
+        opt.innerText = cat.name;
+        modalSelect.appendChild(opt);
+        console.log("Adding category to modal:", cat.name);
+    });
+}
 
 // =====================
 // 11. ADD PIN FLOW
@@ -407,7 +432,7 @@ async function savePin() {
         group_id: parseInt(groupId),
         lat: tempLat,
         lng: tempLng,
-        opening_time: opening,    
+        opening_time: opening,
         closing_time: closing,
         working_days: workingDaysText
     };
@@ -463,7 +488,7 @@ map.on('zoomend', () => {
     });
 });
 
-map.on('click', function(e) {
+map.on('click', function (e) {
 
     if (justOpenedCard) return;
 
@@ -481,7 +506,7 @@ map.on('click', function(e) {
             draggable: true
         }).addTo(map);
 
-        tempMarker.on('dragend', function(event) {
+        tempMarker.on('dragend', function (event) {
             const pos = event.target.getLatLng();
             tempLat = pos.lat;
             tempLng = pos.lng;
@@ -510,21 +535,21 @@ function getWorkingDaysText(selectedDays) {
         'mon': 'Пон', 'tue': 'Вто', 'wed': 'Сре',
         'thu': 'Чет', 'fri': 'Пет', 'sat': 'Саб', 'sun': 'Нед'
     };
-    
+
     const daysOrder = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'];
     const selected = daysOrder.filter(day => selectedDays.includes(day));
-    
+
     if (selected.length === 0) return '❌ Не е наведено';
     if (selected.length === 7) return 'Секој ден';
-    
+
     let ranges = [];
     let start = selected[0];
     let end = selected[0];
-    
+
     for (let i = 1; i < selected.length; i++) {
-        const prevIndex = daysOrder.indexOf(selected[i-1]);
+        const prevIndex = daysOrder.indexOf(selected[i - 1]);
         const currIndex = daysOrder.indexOf(selected[i]);
-        
+
         if (currIndex === prevIndex + 1) {
             end = selected[i];
         } else {
@@ -534,17 +559,17 @@ function getWorkingDaysText(selectedDays) {
         }
     }
     ranges.push({ start: dayMap[start], end: dayMap[end] });
-    
+
     return ranges.map(range => range.start === range.end ? range.start : `${range.start} - ${range.end}`).join(', ');
 }
 
 // Set active chips based on saved working days text
 function setSelectedDaysFromText(workingDaysText) {
     if (!workingDaysText) return;
-    
+
     const chips = document.querySelectorAll('.chip');
     chips.forEach(chip => chip.classList.remove('active'));
-    
+
     const dayMap = {
         'пон': 'mon', 'понеделник': 'mon',
         'вто': 'tue', 'вторник': 'tue',
@@ -554,9 +579,9 @@ function setSelectedDaysFromText(workingDaysText) {
         'саб': 'sat', 'сабота': 'sat',
         'нед': 'sun', 'недела': 'sun'
     };
-    
+
     const lowerText = workingDaysText.toLowerCase();
-    
+
     const rangeMatch = lowerText.match(/([а-я]+)\s*-\s*([а-я]+)/);
     if (rangeMatch) {
         const startDay = dayMap[rangeMatch[1]];
@@ -564,7 +589,7 @@ function setSelectedDaysFromText(workingDaysText) {
         const daysOrder = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'];
         const startIndex = daysOrder.indexOf(startDay);
         const endIndex = daysOrder.indexOf(endDay);
-        
+
         if (startIndex !== -1 && endIndex !== -1) {
             for (let i = startIndex; i <= endIndex; i++) {
                 const chip = document.querySelector(`.chip[data-day="${daysOrder[i]}"]`);
@@ -572,7 +597,7 @@ function setSelectedDaysFromText(workingDaysText) {
             }
         }
     }
-    
+
     updateSelectedDays();
 }
 
@@ -603,13 +628,13 @@ function checkClosingSoon(openingTime, closingTime) {
     const currentHours = now.getHours();
     const currentMinutes = now.getMinutes();
     const currentTotal = currentHours * 60 + currentMinutes;
-    
+
     const [openHours, openMinutes] = openingTime.split(':').map(Number);
     const [closeHours, closeMinutes] = closingTime.split(':').map(Number);
-    
+
     const openTotal = openHours * 60 + openMinutes;
     const closeTotal = closeHours * 60 + closeMinutes;
-    
+
     if (currentTotal < openTotal || currentTotal > closeTotal) {
         return {
             isClosingSoon: false,
@@ -617,9 +642,9 @@ function checkClosingSoon(openingTime, closingTime) {
             status: "closed"
         };
     }
-    
+
     const minutesUntilClose = closeTotal - currentTotal;
-    
+
     if (minutesUntilClose >= 0 && minutesUntilClose <= 60) {
         return {
             isClosingSoon: true,
@@ -627,7 +652,7 @@ function checkClosingSoon(openingTime, closingTime) {
             message: `⚠️ Затвора за ${minutesUntilClose} минути!`
         };
     }
-    
+
     return {
         isClosingSoon: false,
         message: null,
@@ -635,7 +660,7 @@ function checkClosingSoon(openingTime, closingTime) {
     };
 }
 
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', function () {
     const chips = document.querySelectorAll('.chip');
     if (chips.length > 0) {
         chips.forEach(chip => {
@@ -645,15 +670,15 @@ document.addEventListener('DOMContentLoaded', function() {
             });
         });
     }
-    
+
     const timeInputs = document.querySelectorAll('.time-simple');
     timeInputs.forEach(input => {
-        input.addEventListener('input', function(e) {
+        input.addEventListener('input', function (e) {
             let value = this.value.replace(/\D/g, '');
             if (value.length >= 2) {
-                value = value.slice(0,2) + ':' + value.slice(2,4);
+                value = value.slice(0, 2) + ':' + value.slice(2, 4);
             }
-            this.value = value.slice(0,5);
+            this.value = value.slice(0, 5);
         });
     });
 });
